@@ -1,1 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Plains Moment</title>
+  <script src="https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.development.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.development.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/babel-standalone@7.18.9/babel.min.js"></script>
+  <link href="./output.css" rel="stylesheet">
+</head>
+<body class="bg-gray-900 text-white">
+  <div id="root"></div>
+  <script type="text/babel">
+    const { useState, useEffect } = React;
 
+    function App() {
+      const [user, setUser] = useState(null);
+      const [images, setImages] = useState([]);
+      const [imageFile, setImageFile] = useState(null);
+
+      // Handle Discord OAuth2 login
+      const handleDiscordLogin = () => {
+        const clientId = 'YOUR_DISCORD_CLIENT_ID'; // Replace with your Discord app client ID
+        const redirectUri = encodeURIComponent(window.location.origin + '/callback');
+        const discordAuthUrl = `https://discord.com/api/oauth2/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&scope=identify`;
+        window.location.href = discordAuthUrl;
+      };
+
+      // Handle OAuth2 callback
+      useEffect(() => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const code = urlParams.get('code');
+        if (code) {
+          // In a real app, exchange code for token via backend
+          // For demo, simulate user data
+          setUser({
+            username: 'DemoUser#1234',
+            avatar: 'https://via.placeholder.com/50',
+          });
+          window.history.replaceState({}, document.title, '/');
+        }
+      }, []);
+
+      // Handle image upload
+      const handleImageUpload = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = (event) => {
+            setImages([...images, event.target.result]);
+          };
+          reader.readAsDataURL(file);
+        }
+      };
+
+      return (
+        <div className="min-h-screen bg-gray-900 flex flex-col items-center p-4">
+          <header className="w-full max-w-4xl flex justify-between items-center mb-6">
+            <h1 className="text-3xl font-bold text-blue-400">Plains Moment</h1>
+            {user ? (
+              <div className="flex items-center space-x-4">
+                <img src={user.avatar} alt="Avatar" className="w-10 h-10 rounded-full" />
+                <span>{user.username}</span>
+                <button
+                  onClick={() => setUser(null)}
+                  className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded"
+                >
+                  Logout
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={handleDiscordLogin}
+                className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded"
+              >
+                Login with Discord
+              </button>
+            )}
+          </header>
+
+          <main className="w-full max-w-4xl">
+            {user ? (
+              <div>
+                <div className="mb-6">
+                  <label className="block mb-2 text-lg">Upload Image</label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    className="bg-gray-800 p-2 rounded w-full text-white"
+                  />
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                  {images.map((img, index) => (
+                    <div key={index} className="relative">
+                      <img
+                        src={img}
+                        alt={`Uploaded ${index}`}
+                        className="w-full h-64 object-cover rounded-lg"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <p className="text-center text-gray-400">
+                Please login with Discord to upload and view images.
+              </p>
+            )}
+          </main>
+        </div>
+      );
+    }
+
+    ReactDOM.render(<App />, document.getElementById('root'));
+  </script>
+</body>
+</html>
